@@ -1,0 +1,77 @@
+// Q1
+
+import java.util.Scanner;
+
+class CoinChangeThread extends Thread {
+    private int[] coins;
+    private int sum;
+    private int count;
+
+    public CoinChangeThread(int[] coins, int sum) {
+        this.coins = coins;
+        this.sum = sum;
+        this.count = 0;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    @Override
+    public void run() {
+        count = countWays(coins, coins.length, sum);
+    }
+
+    private int countWays(int[] coins, int m, int n) {
+        int[] dp = new int[n + 1];
+        dp[0] = 1;
+
+        for (int coin : coins) {
+            for (int j = coin; j <= n; j++) {
+                dp[j] += dp[j - coin];
+            }
+        }
+        return dp[n];
+    }
+}
+
+public class CoinChangeMultiThreading {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of coins: ");
+        int N = scanner.nextInt();
+
+        int[] coins = new int[N];
+        System.out.println("Enter the denominations of coins:");
+        for (int i = 0; i < N; i++) {
+            coins[i] = scanner.nextInt();
+        }
+
+        System.out.print("Enter the target sum: "); 
+        int sum = scanner.nextInt();
+
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        CoinChangeThread[] threads = new CoinChangeThread[threadCount];
+        int chunk = sum / threadCount;
+
+        for (int i = 0; i < threadCount; i++) {
+            int start = i * chunk;
+            int end = (i == threadCount - 1) ? sum : start + chunk;
+
+            threads[i] = new CoinChangeThread(coins, end - start);
+            threads[i].start();
+        }
+
+        int totalWays = 0;
+        try {
+            for (CoinChangeThread thread : threads) {
+                thread.join();
+                totalWays += thread.getCount();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Number of ways to make the sum using given coins: " + totalWays);
+    }
