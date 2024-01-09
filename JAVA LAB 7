@@ -1,1 +1,40 @@
+import java.util.HashMap;
+import java.util.Map;
 
+public class Product {
+    private String id;
+    private String name;
+    private double price;
+    private Map<String, Double> discounts;
+
+    public Product(String id, String name, double price) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.discounts = new HashMap<>();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public Map<String, Double> getDiscounts() {
+        return discounts;
+    }
+
+    public void addDiscount(String code, double discount) {
+        this.discounts.put(code, discount);
+    }
+
+    public void removeDiscount(String code) {
+        this.discounts.remove(code);
+    }
+}
