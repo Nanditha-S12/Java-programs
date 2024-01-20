@@ -1,227 +1,243 @@
-import java.util.HashMap;
+
+// Lab 6 Program 2
+// Description - Handling efficient functionalities for both customers and administrators in a online shopping platform.
+// Implementing exception handling to handle various scenarios
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-class InsufficientInventoryException extends Exception {
-    public InsufficientInventoryException(String message) {
+
+// Handling custom exceptions
+// This class is to handle order processing exceptions
+// Base exception an used as a super class for more specific exceptions
+
+class OrderProcessingException extends Exception{
+    public OrderProcessingException(String message){
+        super(message);
+    }
+
+}
+
+// This class is to hande insufficient inventory exceptions
+// This exception is thrown when the system encounters insufficient inventory while attempting to process an order
+
+class InsufficientInventoryException extends OrderProcessingException{
+
+    public InsufficientInventoryException(String message){
         super(message);
     }
 }
 
-class OrderCancellationException extends Exception {
-    public OrderCancellationException(String message) {
+// This class is to handle order cancelled exceptions
+
+class OrderCancelledException extends OrderProcessingException{
+
+    public OrderCancelledException(String message){
         super(message);
     }
 }
 
-class OrderStatus {
-    private String message;
+// Enum for order status
+// Enum is used to define predefined constants, it has three constants
 
-    public OrderStatus(String message) {
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+enum OrderStatus{
+    PROCESSING, COMPLETED, CANCELLED
 }
 
-class Item {
-    private String name;
-    private int stockQuantity;
+// Creation of Item class
 
-    public Item(String name, int stockQuantity) {
+class Item{
+    public String name;
+    public int quantity;
+
+    // Constructor
+    public Item(String name, int quantity){
         this.name = name;
-        this.stockQuantity = stockQuantity;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public int getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
-}
-
-class Order {
-    private static int nextOrderId = 1;
-    private int orderId;
-    private String itemName;
-    private int quantity;
-
-    public Order(String itemName, int quantity) {
-        this.orderId = nextOrderId++;
-        this.itemName = itemName;
         this.quantity = quantity;
     }
 
-    public int getOrderId() {
-        return orderId;
+    public String getName(){
+        return name;
     }
 
-    public String getItemName() {
-        return itemName;
-    }
-
-    public int getQuantity() {
+    public int getQuantity(){
         return quantity;
     }
 }
 
-class Inventory {
-    private Map<String, Item> items;
-    private Map<Integer, Order> orders;
+// Creation of Order class
 
-    public Inventory() {
-        items = new HashMap<>();
-        items.put("Phone", new Item("Phone", 10));
-        items.put("Television", new Item("Television", 15));
+class Order{
+    public int orderId;
+    public List<Item> item;
+    public OrderStatus status;
 
-        orders = new HashMap<>();
+    // Constructor
+    public Order(int orderId, List<Item> item){
+        this.orderId = orderId;
+        this.item = item;
+        this.status = OrderStatus.COMPLETED;
     }
 
-    public void displayAvailableItems() {
-        System.out.println("Available items in the inventory:");
-        int itemNumber = 1;
-        for (String itemName : items.keySet()) {
-            System.out.println(itemNumber + ". " + itemName);
-            itemNumber++;
-        }
+    public int getOrderId(){
+        return orderId;
     }
 
-    public Set<String> getItemNames() {
-        return items.keySet();
+    public List<Item> getItems(){
+        return item;
     }
 
-    public Item getItemByName(String itemName) {
-        return items.get(itemName);
+    public OrderStatus getStatus() {
+        
+        return status;
     }
 
-    public boolean checkAvailability(Item item, int quantity) {
-        return item.getStockQuantity() >= quantity;
+    public void setStatus(OrderStatus status){
+        this.status = status;
     }
 
-    public void updateStock(Item item, int quantity) {
-        int updatedQuantity = item.getStockQuantity() - quantity;
-        item.setStockQuantity(updatedQuantity);
-    }
-
-    public void placeOrder(Order order) throws InsufficientInventoryException {
-        if (checkAvailability(getItemByName(order.getItemName()), order.getQuantity())) {
-            System.out.println("Order placed successfully. Your order ID is: " + order.getOrderId());
-            updateStock(getItemByName(order.getItemName()), order.getQuantity());
-            orders.put(order.getOrderId(), order);
-        } else {
-            throw new InsufficientInventoryException("Insufficient inventory for item: " + order.getItemName());
-        }
-    }
-
-    public OrderStatus trackOrderStatus(int orderId) {
-        Order order = orders.get(orderId);
-        if (order != null) {
-            String itemName = order.getItemName();
-            int quantity = order.getQuantity();
-            String message = "Order details:\nItem Name: " + itemName + "\nQuantity: " + quantity
-                    + "\nYour order will be delivered within 7 days.";
-            return new OrderStatus(message);
-        } else {
-            return null;
-        }
-    }
-
-    public void handleCustomException(Exception e) {
-        if (e instanceof InsufficientInventoryException) {
-            System.out.println("Exception: InsufficientInventoryException - " + e.getMessage());
-        } else if (e instanceof OrderCancellationException) {
-            System.out.println("Exception: OrderCancellationException - " + e.getMessage());
-        } else {
-            System.out.println("Exception: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-        }
-    }
-
-    public String getItemNameByNumber(int itemNumber) {
-        int currentNumber = 1;
-        for (String itemName : items.keySet()) {
-            if (currentNumber == itemNumber) {
-                return itemName;
-            }
-            currentNumber++;
-        }
-        return null;
-    }
 }
 
-public class inventorysystem {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Inventory inventory = new Inventory();
+// This class contains the core functionality
 
-        char input;
-        do {
-            System.out.println("Welcome to the Inventory System");
-            System.out.println("1. Order an Item");
-            System.out.println("2. Track an Order");
-            System.out.println("3. Exit");
+public class EnhancedOrderFulfillmentSystem {
 
-            System.out.print("Enter your choice: ");
-            int choice = scanner.nextInt();
+    private List<Order> orders;
+    private Map<String,Integer> inventory; // Map provides fast access to inventory item using keys
+    private final Object lock = new Object(); // This object is used for synchronization purposes
 
-            switch (choice) {
-                case 1:
-                    orderItem(inventory, scanner);
-                    break;
-                case 2:
-                    trackOrder(inventory, scanner);
-                    break;
-                case 3:
-                    System.out.println("Exiting the system. Goodbye!");
-                    System.exit(0);
-                default:
-                    System.out.println("Invalid choice. Please enter a valid option (1-3)");
+    public EnhancedOrderFulfillmentSystem(){
+        orders = new ArrayList<>();
+        inventory = new HashMap<>();
+    }
+
+    // The usage of synchronized is it will allow single thread at a time
+
+    public synchronized void placeOrder(Order order){
+        orders.add(order);
+        System.out.println("Order " + order.getOrderId() + " placed");
+    }
+
+    // This method is used to update the inventory 
+
+    public synchronized void updateInventory(Order order) throws InsufficientInventoryException{
+        
+        for(Item item: order.getItems()){
+            String itemName = item.getName();
+            int itemQuantity = item.getQuantity();
+
+            if(inventory.containsKey(itemName)){
+                int currentQuantity = inventory.get(itemName);
+                if(currentQuantity >= itemQuantity){
+                    inventory.put(itemName, currentQuantity - itemQuantity);
+                }
+                else{
+                    throw new InsufficientInventoryException("Insufficient inventory for item: " + itemName);
+                }
             }
-
-            System.out.print("Do you want to continue (y/n)? ");
-            input = scanner.next().charAt(0);
-        } while (input == 'y' || input == 'Y');
-    }
-
-    private static void orderItem(Inventory inventory, Scanner scanner) {
-        inventory.displayAvailableItems();
-        System.out.print("Enter the item number you want to order: ");
-        int itemNumber = scanner.nextInt();
-
-        String itemName = inventory.getItemNameByNumber(itemNumber);
-        if (itemName == null) {
-            System.out.println("Invalid item number. Please enter a valid item number.");
-            return;
-        }
-
-        System.out.print("Enter the quantity: ");
-        int quantity = scanner.nextInt();
-
-        try {
-            Order order = new Order(itemName, quantity);
-            inventory.placeOrder(order);
-        } catch (InsufficientInventoryException e) {
-            inventory.handleCustomException(e);
+            else{
+                throw new InsufficientInventoryException("Item " + itemName + " not found in the inventory");
+            }
         }
     }
 
-    private static void trackOrder(Inventory inventory, Scanner scanner) {
-        System.out.print("Enter the order ID: ");
-        int orderId = scanner.nextInt();
-        OrderStatus status = inventory.trackOrderStatus(orderId);
+    // This method is to check the inventory availability
 
-        if (status != null) {
-            System.out.println(status.getMessage());
-        } else {
-            System.out.println("Order not found. Please try again.");
+    public synchronized boolean checkInventoryAvailability(Item item){
+
+        int availableQuantity = inventory.getOrDefault(item.getName(), 0);
+        return availableQuantity >= item.getQuantity();
+
+    }
+
+    // This method is responsible for initiating the processing of submitted orders using worker threads
+    // Worker Threads is a part of thread pool. It is a managed collection of threads created to execute tasks simultaneously
+    // Instead of creating a various threads the thread pool uses a fixed size and allows to execute tasks concurently
+
+    public void startProcessing(){
+
+        ExecutorService executor = Executors.newFixedThreadPool(3); // Creates a thread pool with three worker threads
+        // Looping through the list of orders
+        for(Order order: orders){
+            executor.execute(()->{ // submits each order processing task
+                try{
+                    synchronized(lock){
+                        updateInventory(order); // Updates the inventory based on the items in the order
+                    }
+                    order.setStatus(OrderStatus.COMPLETED); // Sets the order status as completed if the order is sucessfully
+                    System.out.println("Order " + order.getOrderId() + " processed");
+                }
+                catch(InsufficientInventoryException e){
+
+                    order.setStatus(OrderStatus.CANCELLED); // Sets the order status as cancelled if the inventory is insufficient
+                    System.out.println("Order " + order.getOrderId() + " cancelled " + e.getMessage());
+
+                }
+            });
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()){
+            // This waits until all the process are completed after the shutdown request
         }
     }
+
+    public void waitForCompletion(){
+        startProcessing();
+    }
+
+    public synchronized OrderStatus trackOrderStatus(int orderId){
+        for(Order order:orders){
+            if(order.getOrderId() == orderId){
+                return order.getStatus();
+            }
+        }
+        return null;
+
+    }
+
+    // Main Method
+
+    public static void main(String[] args) {
+        
+        EnhancedOrderFulfillmentSystem eos = new EnhancedOrderFulfillmentSystem();
+
+        // Adding items to the inventory
+
+        eos.inventory.put("Item1", 10);
+        eos.inventory.put("Item2", 5);
+        eos.inventory.put("Item3", 8);
+
+        // Creating orders
+
+        List<Item> items1 = List.of(new Item("Item1", 2), new Item("Item2", 1));
+        List<Item> items2 = List.of(new Item("Item3", 12));
+
+        Order order1 = new Order(1, items1);
+        Order order2 = new Order(2, items2);
+
+        System.out.println("");
+        System.out.println("Enhanced Order Fulfillment System");
+        System.out.println("---------------------------------");
+        System.out.println("");
+
+        // Placing the order
+
+        eos.placeOrder(order1);
+        eos.placeOrder(order2);
+
+        // Start order processing
+
+        eos.waitForCompletion();
+
+        // Tracking Order Status
+
+        System.out.println(eos.trackOrderStatus(1));
+        System.out.println(eos.trackOrderStatus(2));
+        System.out.println(" ");
+    }
+
 }
