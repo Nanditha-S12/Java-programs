@@ -1,230 +1,230 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.TreeSet;
+// lab 7 Program
+// Scenario - Ongoing advancement of Amazon's CRM infra, the goal is to streamline customer data management and optimize data processing.
+// Implementing three classes customer,product,order
+// Using various data structure for optimizing data storage, retrieval and management
 
-class Customer implements Comparable<Customer> {
-    String customerId;
-    String name;
+import java.util.ArrayList; // For managing dynamic lists of customers, products and orders
+import java.util.HashMap; // Efficient retrieval of products and customers
+import java.util.HashSet; // Eliminates duplicates
+import java.util.TreeSet; // Sorting
 
-    public Customer(String customerId, String name) {
+
+// Creation of customer class
+
+class Customer{
+
+    public int customerId;
+    public String customerName;
+    public int customerPincode;
+
+    // Constructor
+    public Customer(int customerId, String customerName, int customerPincode){
+
         this.customerId = customerId;
-        this.name = name;
+        this.customerName = customerName;
+        this.customerPincode = customerPincode;
     }
 
-    public String getCustomerId() {
+    // Getting customer id
+    public int returncustomerId(){
         return customerId;
     }
 
-    public String getName() {
-        return name;
+    // Getting customer name
+    public String returncustomerName(){
+        return customerName;
     }
 
-    @Override
-    public int compareTo(Customer other) {
-        return this.customerId.compareTo(other.customerId);
-    }
-
-    public String toString() {
-        return "Customer{id='" + customerId + "', name='" + name + "'}";
+    // Getting pincode
+    public int returnPincode(){
+        return customerPincode;
     }
 }
 
-class Product implements Comparable<Product> {
-    String productId;
-    String name;
-    double price;
+// Creation of product class
 
-    public Product(String productId, String name, double price) {
-        this.productId = productId;
-        this.name = name;
-        this.price = price;
+class Product{
+
+    int productId;
+    String productName;
+
+    // Constructor
+    public Product(int productId, String productName){
+
+      this.productId = productId;
+      this.productName = productName;
+
     }
 
-    public String getProductId() {
+    // Getting product id
+    public int getPid(){
         return productId;
     }
 
-    public String getName() {
-        return name;
+    // Getting product name
+    public String getPname(){
+        return productName;
     }
 
-    public double getPrice() {
-        return price;
-    }
-
-    @Override
-    public int compareTo(Product other) {
-        return this.productId.compareTo(other.productId);
-    }
-
-    public String toString() {
-        return "Product{id='" + productId + "', name='" + name + "', price=" + price + "}";
-    }
 }
 
-class Order implements Comparable<Order> {
-    String orderId;
-    Customer customer;
-    Product product;
-    int quantity;
+// Creation of order class
 
-    public Order(String orderId, Customer customer, Product product, int quantity) {
+class Order{
+
+    public int orderId;
+    public Customer customer; // Represents customer associated with the order
+    public ArrayList<Product> products;
+
+    public Order(int orderId, Customer customer){
+
         this.orderId = orderId;
         this.customer = customer;
-        this.product = product;
-        this.quantity = quantity;
+        this.products = new ArrayList<>();
+
     }
 
-    public String getOrderId() {
-        return orderId;
+    public void addProducts(Product product){
+        this.products.add(product);
     }
 
-    public Customer getCustomer() {
-        return customer;
+    public ArrayList<Product> getProducts(){
+        return products;
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public double getTotalPrice() {
-        if (product != null) {
-            return quantity * product.getPrice();
-        } else {
-            return 0.0; // Or handle it as needed
-        }
-    }
-
-    @Override
-    public int compareTo(Order other) {
-        return this.orderId.compareTo(other.orderId);
-    }
-
-    public String toString() {
-        return "Order{id='" + orderId + "', customer=" + customer +
-               ", product=" + product + ", quantity=" + quantity +
-               ", total price=" + getTotalPrice() + "}";
-    }
 }
 
-public class AmazonCRMSystem {
-    private static ArrayList<Customer> customerList = new ArrayList<>();
-    private static ArrayList<Product> productList = new ArrayList<>();
-    private static ArrayList<Order> orderList = new ArrayList<>();
-    private static HashMap<String, Customer> customerMap = new HashMap<>();
-    private static HashMap<String, Product> productMap = new HashMap<>();
-    private static HashSet<Product> uniqueProducts = new HashSet<>();
-    private static TreeSet<Customer> sortedCustomers = new TreeSet<>();
-    private static TreeSet<Product> sortedProducts = new TreeSet<>();
-    private static Scanner scanner = new Scanner(System.in);
+public class AmazonCRM {
 
-    public static void main(String[] args) {
-        displayMenu();
+    private ArrayList<Customer> customers;
+    private ArrayList<Order> orders;
+    private ArrayList<Product> products;
+    private HashMap<Integer, Customer> customerMap;
+    private HashMap<Integer, Product> productMap;
+    private HashMap<Customer, HashSet<Product>>  customerproductMap;
+    private TreeSet<Customer> sortedCustomers;
+
+
+    // Constructor
+    public AmazonCRM(){
+
+        customers = new ArrayList<>();
+        products = new ArrayList<>();
+        orders = new ArrayList<>();
+        customerMap = new HashMap<>();
+        productMap = new HashMap<>();
+        customerproductMap = new HashMap<>();
+        sortedCustomers = new TreeSet<>((c1,c2)-> c1.returncustomerName().compareTo(c2.returncustomerName())); // To maintain ordered collection of customers
+
     }
 
-    private static void displayMenu() {
-        int choice;
-        do {
-            System.out.println("\n---- Amazon CRM System ----");
-            System.out.println("1. Add Customer");
-            System.out.println("2. Add Product");
-            System.out.println("3. Place Order");
-            System.out.println("4. Display Order List");
-            System.out.println("5. Exit");
-            System.out.print("Enter your choice: ");
-            choice = scanner.nextInt();
-            scanner.nextLine(); // Consume the newline character
+    // This method is used to add customer
 
-            switch (choice) {
-                case 1:
-                    addCustomer();
-                    break;
-                case 2:
-                    addProduct();
-                    break;
-                case 3:
-                    placeOrder();
-                    break;
-                case 4:
-                    displayOrderList();
-                    break;
-                case 5:
-                    System.out.println("Exiting... Thank you!");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-            }
-        } while (choice != 5);
-    }
-
-    private static void addCustomer() {
-        System.out.print("Enter customer ID: ");
-        String customerId = scanner.nextLine();
-        System.out.print("Enter customer name: ");
-        String customerName = scanner.nextLine();
-        Customer customer = new Customer(customerId, customerName);
-        customerList.add(customer);
-        customerMap.put(customerId, customer);
+    public void addCustomer(Customer customer){
+        customers.add(customer);
+        customerMap.put(customer.returncustomerId(), customer);
         sortedCustomers.add(customer);
-        System.out.println("Customer added successfully!");
     }
 
-    private static void addProduct() {
-        System.out.print("Enter product ID: ");
-        String productId = scanner.nextLine();
-        System.out.print("Enter product name: ");
-        String productName = scanner.nextLine();
-        System.out.print("Enter product price: ");
-        double productPrice = scanner.nextDouble();
-        Product product = new Product(productId, productName, productPrice);
-        productList.add(product);
-        productMap.put(productId, product);
-        uniqueProducts.add(product);
-        sortedProducts.add(product);
-        System.out.println("Product added successfully!");
+    // This method is used to add product
+
+    public void addProduct(Product product){
+
+        products.add(product);
+        productMap.put(product.getPid(), product);
+
     }
 
-    private static void placeOrder() {
-        System.out.print("Enter customer ID: ");
-        String customerId = scanner.nextLine();
-        Customer customer = customerMap.get(customerId);
-        if (customer == null) {
-            System.out.println("Customer not found. Please add the customer first.");
-            return;
+    // This method is for placing the order
+
+    public void placeOrder(Order order){
+        orders.add(order);
+        Customer customer = order.customer;
+        HashSet<Product> customerProducts = customerproductMap.getOrDefault(customer,new HashSet<>());
+        customerProducts.addAll(order.getProducts());
+        customerproductMap.put(customer,customerProducts);
+    }
+
+
+    // This method is for finding the customer by id
+
+    public Customer findCustomerById(Integer customerId){
+        return customerMap.get(customerId);
+    }
+
+    // This method is for finding the product by id
+
+    public Product findProductById(Integer productId){
+        return productMap.get(productId);
+    }
+
+
+    // This method retrives the products for respective customer using HashSet
+
+    public HashSet<Product> getProductsForCustomer(Customer customer){
+
+        return customerproductMap.getOrDefault(customer, new HashSet<>());
+
+    }
+
+    // Sorted Customers using TreeSet Data Structure
+
+    public TreeSet<Customer> getSortedCustomers(){
+        return sortedCustomers;
+    }
+
+    // Main Method
+    public static void main(String[] args) {
+
+        AmazonCRM acrm = new AmazonCRM();
+
+        // Creation of customers, products and orders
+       
+         Customer customer1 = new Customer(234, "Bagya", 123456);
+         Customer customer2 = new Customer(235, "Aaranav", 098766);
+
+         Product product1 = new Product(777, "Hp 15s");
+         Product product2 = new Product(888, "Mac");
+
+         Order order1 = new Order(144, customer1);
+        //  Order order2 = new Order(2, customer1);
+
+        order1.addProducts(product2);
+
+
+        // Adding customers, products, and orders to the CRM
+
+        acrm.addCustomer(customer1);
+        acrm.addCustomer(customer2);
+        acrm.addProduct(product2);
+        acrm.addProduct(product1);
+        acrm.placeOrder(order1);
+
+        // CRM Functionality
+
+        Customer retrievedCustomer = acrm.findCustomerById(234);
+        if(retrievedCustomer != null){
+            
+            System.out.println("");
+            System.out.println("Enhancing Amazon's CRM Infra");
+            System.out.println("----------------------------");
+            System.out.println("");
+
+            System.out.println("Retrieved Customer: " + retrievedCustomer.returncustomerName());
         }
 
-        System.out.print("Enter product ID: ");
-        String productId = scanner.nextLine();
-        Product product = productMap.get(productId);
-        if (product == null) {
-            System.out.println("Product not found. Please add the product first.");
-            return;
+        HashSet<Product> prodforCust1 = acrm.getProductsForCustomer(customer1);
+        System.out.println("Products for customer 1: ");
+        for(Product product: prodforCust1){
+            System.out.println(product.getPname());
         }
 
-        System.out.print("Enter order ID: ");
-        String orderId = scanner.nextLine();
-        System.out.print("Enter order quantity: ");
-        int orderQuantity = scanner.nextInt();
-
-        Order order = new Order(orderId, customer, product, orderQuantity);
-        orderList.add(order);
-        System.out.println("Order placed successfully!");
-    }
-
-    private static void displayOrderList() {
-        if (orderList.isEmpty()) {
-            System.out.println("Order list is empty.");
-        } else {
-            System.out.println("\n---- Order List ----");
-            for (Order order : orderList) {
-                System.out.println(order);
-            }
+        TreeSet<Customer> sortedCustomers = acrm.getSortedCustomers();
+        System.out.println("Sorted Customers");
+        for(Customer sortedCustomer : sortedCustomers){
+            System.out.println(sortedCustomer.returncustomerName());
         }
+
     }
+
 }
